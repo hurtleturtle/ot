@@ -103,7 +103,7 @@ def run_sync_client(destination, port, loops=100):
     # Keep both of these cases in mind when testing as the following will
     # _only_ pass with the supplied asynchronous modbus server (script supplied).
     # ----------------------------------------------------------------------- #
-    for iteration in loops:
+    for iteration in range(loops):
         iter_unit = UNIT + random.randint(0, 100)
         rq = client.write_coil(0, True, unit=iter_unit)
         rr = client.read_coils(0, 1, unit=iter_unit)
