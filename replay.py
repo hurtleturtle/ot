@@ -16,9 +16,12 @@ the guard construct that is available in python 2.5 and up::
 # --------------------------------------------------------------------------- #
 # import the various client implementations
 # --------------------------------------------------------------------------- #
+from click import parser
 from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 # from pymodbus.client.sync import ModbusUdpClient as ModbusClient
 # from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from argparse import ArgumentParser
+import random
 
 # --------------------------------------------------------------------------- #
 # configure the client logging
@@ -33,7 +36,7 @@ log.setLevel(logging.DEBUG)
 UNIT = 0x1
 
 
-def run_sync_client():
+def run_sync_client(destination, port, loops=100):
     # ------------------------------------------------------------------------#
     # choose the client you want
     # ------------------------------------------------------------------------#
@@ -67,7 +70,7 @@ def run_sync_client():
     #
     #    client = ModbusClient('localhost', retries=3, retry_on_empty=True)
     # ------------------------------------------------------------------------#
-    client = ModbusClient('localhost', port=5020)
+    client = ModbusClient(destination, port=port)
     # from pymodbus.transaction import ModbusRtuFramer
     # client = ModbusClient('localhost', port=5020, framer=ModbusRtuFramer)
     # client = ModbusClient(method='binary', port='/dev/ptyp0', timeout=1)
@@ -100,69 +103,11 @@ def run_sync_client():
     # Keep both of these cases in mind when testing as the following will
     # _only_ pass with the supplied asynchronous modbus server (script supplied).
     # ----------------------------------------------------------------------- #
-    log.debug("Write to a Coil and read back")
-    rq = client.write_coil(0, True, unit=UNIT)
-    rr = client.read_coils(0, 1, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    assert(rr.bits[0] == True)          # test the expected value
-
-    log.debug("Write to multiple coils and read back- test 1")
-    rq = client.write_coils(1, [True]*8, unit=UNIT)
-    rr = client.read_coils(1, 21, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    resp = [True]*21
-
-    # If the returned output quantity is not a multiple of eight,
-    # the remaining bits in the final data byte will be padded with zeros
-    # (toward the high order end of the byte).
-
-    resp.extend([False]*3)
-    assert(rr.bits == resp)         # test the expected value
-
-    log.debug("Write to multiple coils and read back - test 2")
-    rq = client.write_coils(1, [False]*8, unit=UNIT)
-    rr = client.read_coils(1, 8, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    assert(rr.bits == [False]*8)         # test the expected value
-
-    log.debug("Read discrete inputs")
-    rr = client.read_discrete_inputs(0, 8, unit=UNIT)
-    assert(not rr.isError())     # test that we are not an error
-
-    log.debug("Write to a holding register and read back")
-    rq = client.write_register(1, 10, unit=UNIT)
-    rr = client.read_holding_registers(1, 1, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    assert(rr.registers[0] == 10)       # test the expected value
-
-    log.debug("Write to multiple holding registers and read back")
-    rq = client.write_registers(1, [10]*8, unit=UNIT)
-    rr = client.read_holding_registers(1, 8, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    assert(rr.registers == [10]*8)      # test the expected value
-
-    log.debug("Read input registers")
-    rr = client.read_input_registers(1, 8, unit=UNIT)
-    assert(not rr.isError())     # test that we are not an error
-
-    arguments = {
-        'read_address':    1,
-        'read_count':      8,
-        'write_address':   1,
-        'write_registers': [20]*8,
-    }
-    log.debug("Read write registeres simulataneously")
-    rq = client.readwrite_registers(unit=UNIT, **arguments)
-    rr = client.read_holding_registers(1, 8, unit=UNIT)
-    assert(not rq.isError())     # test that we are not an error
-    assert(not rr.isError())     # test that we are not an error
-    assert(rq.registers == [20]*8)      # test the expected value
-    assert(rr.registers == [20]*8)      # test the expected value
+    for iteration in loops:
+        iter_unit = UNIT + random.randint(0, 100)
+        rq = client.write_coil(0, True, unit=iter_unit)
+        rr = client.read_coils(0, 1, unit=iter_unit)
+        log.debug(f'iteration {iteration + 1}: {iter_unit}')
 
     # ----------------------------------------------------------------------- #
     # close the client
@@ -170,5 +115,14 @@ def run_sync_client():
     client.close()
 
 
+def get_args():
+    parser = ArgumentParser()
+    parser.add_argument('destination_server', default='localhost' help='Destination modbus server')
+    parser.add_argument('-p', '--port', default=5020, type=int, help='Modbus server port')
+    parser.add_argument('-i', '--iterations', default=500, type=int, help='Number of iterations')
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    run_sync_client()
+    args = get_args()
+    run_sync_client(destination=args.destination_server, port=args.port, loops=args.iterations)
