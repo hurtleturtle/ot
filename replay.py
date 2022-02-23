@@ -77,42 +77,46 @@ def run_sync_client(destination, port, loops=100):
     # client = ModbusClient(method='ascii', port='/dev/ptyp0', timeout=1)
     # client = ModbusClient(method='rtu', port='/dev/ptyp0', timeout=1,
     #                       baudrate=9600)
-    client.connect()
+    try:
+        client.connect()
 
-    # ------------------------------------------------------------------------#
-    # specify slave to query
-    # ------------------------------------------------------------------------#
-    # The slave to query is specified in an optional parameter for each
-    # individual request. This can be done by specifying the `unit` parameter
-    # which defaults to `0x00`
-    # ----------------------------------------------------------------------- #
-    log.debug("Reading Coils")
-    rr = client.read_coils(1, 1, unit=UNIT)
-    log.debug(rr)
+        # ------------------------------------------------------------------------#
+        # specify slave to query
+        # ------------------------------------------------------------------------#
+        # The slave to query is specified in an optional parameter for each
+        # individual request. This can be done by specifying the `unit` parameter
+        # which defaults to `0x00`
+        # ----------------------------------------------------------------------- #
+        log.debug("Reading Coils")
+        rr = client.read_coils(1, 1, unit=UNIT)
+        log.debug(rr)
 
 
-    # ----------------------------------------------------------------------- #
-    # example requests
-    # ----------------------------------------------------------------------- #
-    # simply call the methods that you would like to use. An example session
-    # is displayed below along with some assert checks. Note that some modbus
-    # implementations differentiate holding/input discrete/coils and as such
-    # you will not be able to write to these, therefore the starting values
-    # are not known to these tests. Furthermore, some use the same memory
-    # blocks for the two sets, so a change to one is a change to the other.
-    # Keep both of these cases in mind when testing as the following will
-    # _only_ pass with the supplied asynchronous modbus server (script supplied).
-    # ----------------------------------------------------------------------- #
-    for iteration in range(loops):
-        iter_unit = UNIT + random.randint(0, 100)
-        rq = client.write_coil(0, True, unit=iter_unit)
-        rr = client.read_coils(0, 1, unit=iter_unit)
-        log.debug(f'iteration {iteration + 1}: {iter_unit}')
+        # ----------------------------------------------------------------------- #
+        # example requests
+        # ----------------------------------------------------------------------- #
+        # simply call the methods that you would like to use. An example session
+        # is displayed below along with some assert checks. Note that some modbus
+        # implementations differentiate holding/input discrete/coils and as such
+        # you will not be able to write to these, therefore the starting values
+        # are not known to these tests. Furthermore, some use the same memory
+        # blocks for the two sets, so a change to one is a change to the other.
+        # Keep both of these cases in mind when testing as the following will
+        # _only_ pass with the supplied asynchronous modbus server (script supplied).
+        # ----------------------------------------------------------------------- #
+        for iteration in range(loops):
+            iter_unit = UNIT + random.randint(0, 100)
+            rq = client.write_coil(0, True, unit=iter_unit)
+            rr = client.read_coils(0, 1, unit=iter_unit)
+            log.debug(f'iteration {iteration + 1}: {iter_unit}')
 
+    except:
+        pass
     # ----------------------------------------------------------------------- #
     # close the client
     # ----------------------------------------------------------------------- #
-    client.close()
+    finally:
+        client.close()
 
 
 def get_args():
