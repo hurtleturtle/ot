@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Pymodbus Synchronous Client Examples
 --------------------------------------------------------------------------
@@ -117,7 +117,7 @@ def run_sync_client(destination, port, loops=100):
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument('destination_server', default='localhost' help='Destination modbus server')
+    parser.add_argument('destination_server', default='localhost', help='Destination modbus server')
     parser.add_argument('-p', '--port', default=5020, type=int, help='Modbus server port')
     parser.add_argument('-i', '--iterations', default=500, type=int, help='Number of iterations')
     return parser.parse_args()
