@@ -29,7 +29,7 @@ import random
 import logging
 FORMAT = ('%(asctime)-15s %(threadName)-15s '
           '%(levelname)-8s %(module)-15s:%(lineno)-8s %(message)s')
-logging.basicConfig(format=FORMAT)
+logging.basicConfig(format=FORMAT, filename='client.out')
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
